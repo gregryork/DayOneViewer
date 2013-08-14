@@ -10,6 +10,7 @@ does build on Linux, but I have not tried running it yet.
 To build it you can get the source and use maven on either Windows or Linux to build.
 
 cd dayone
+
 mvn package
 
 will build the executable jar file.
