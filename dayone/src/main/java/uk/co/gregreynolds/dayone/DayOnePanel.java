@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -15,11 +16,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -37,8 +41,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JPanel contentPanel;
   private JLabel photoLabel = null;
   private UndoManager undoManager = new UndoManager();
-  protected JButton undoButton = new JButton("Undo");
-  protected JButton redoButton = new JButton("Redo");
+  private JButton undoButton = new JButton("Undo");
+  private JButton redoButton = new JButton("Redo");
+  private JButton saveButton = new JButton("Save");
+  private JButton newButton = new JButton("New");
+  
   private UndoableEditListener undoListener = new UndoableEditListener() {
 
     public void undoableEditHappened(UndoableEditEvent e)
@@ -79,11 +86,46 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     undoButton.setEnabled(false);
     redoButton.setEnabled(false);
+    saveButton.setEnabled(true);
+    newButton.setEnabled(true);
+    buttonPanel.add(newButton);
+    buttonPanel.add(saveButton);
     buttonPanel.add(undoButton);
     buttonPanel.add(redoButton);
     textPanel.add(buttonPanel,BorderLayout.NORTH);
 
     text.getDocument().addUndoableEditListener(undoListener);
+    text.getDocument().addDocumentListener(new DocumentListener()
+    {
+      
+      @Override
+      public void removeUpdate(DocumentEvent e)
+      {
+        updateEntry();
+      }
+
+
+      private void updateEntry()
+      {
+        Entry entry = getCurrentEntry();
+        String entryText = text.getText();
+        entry.setEntryText(entryText);
+      }
+      
+      
+      @Override
+      public void insertUpdate(DocumentEvent e)
+      {
+        updateEntry();
+      }
+      
+      
+      @Override
+      public void changedUpdate(DocumentEvent e)
+      {
+        updateEntry();
+      }
+    });
         
     undoButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -105,6 +147,27 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
         }
         updateButtons();
       }
+    });
+    
+    saveButton.addActionListener(new ActionListener()
+    {
+      
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        Entry entry = getCurrentEntry();
+        try
+        {
+          entry.save();
+        }
+        catch (IOException e1)
+        {
+          JOptionPane.showMessageDialog(contentPanel, 
+              "Could not save entry.");
+        }
+        
+      }
+
     });
 
     contentPanel.add(textPanel,BorderLayout.CENTER);
@@ -154,11 +217,18 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       // do nothing
     }
+    
+    if (photo == null)
+    {
+      photo = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
+    }
+    
 
     if (photo != null)
     {
       photoLabel.setIcon(new ImageIcon(photo));      
-    }    
+    }
+    
   }
 
 
@@ -175,4 +245,10 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     return getSplitPane();
   }
 
+  private Entry getCurrentEntry()
+  {
+    EntryDataModel entries = (EntryDataModel)list.getModel();
+    Entry entry = entries.get(list.getSelectedIndex());
+    return entry;
+  }
 }

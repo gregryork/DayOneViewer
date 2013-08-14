@@ -154,4 +154,14 @@ public class Entry implements Comparable<Entry>
     }
     return icon;
   }
+
+  public void save() throws IOException
+  {
+    PropertyListParser.saveAsXML(rootDict, file);
+  }
+
+  public void setEntryText(String entryText)
+  {
+    rootDict.put("Entry Text", entryText);    
+  }
 }
