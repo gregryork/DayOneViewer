@@ -20,7 +20,7 @@ public class DayOneViewer
     File appsFile = new File(dropboxFile,"Apps");
     File dayoneFile = new File(appsFile,"Day One");
     File journalFile = new File(dayoneFile,"Journal.dayone");
-    File entriesFile = new File(journalFile,"entries");
+    final File entriesFile = new File(journalFile,"entries");
     
     final File[] listOfFiles = entriesFile.listFiles();
 
@@ -30,7 +30,7 @@ public class DayOneViewer
       public void run() {
         try
         {
-          createAndShowGUI(listOfFiles);
+          createAndShowGUI(listOfFiles, entriesFile);
         }
         catch (FileNotFoundException e)
         {
@@ -46,7 +46,7 @@ public class DayOneViewer
     });
   }
 
-  private static void createAndShowGUI(File[] listOfFiles) throws Exception
+  private static void createAndShowGUI(File[] listOfFiles, File parentDirectory) throws Exception
   {
     //Create and set up the window.
     JFrame frame = new JFrame("Day One");
@@ -58,7 +58,7 @@ public class DayOneViewer
     }
 
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    DayOnePanel panel = new DayOnePanel(entries);
+    DayOnePanel panel = new DayOnePanel(entries,parentDirectory);
     frame.getContentPane().add(panel.getInterfacePane());
 
     //Display the window.

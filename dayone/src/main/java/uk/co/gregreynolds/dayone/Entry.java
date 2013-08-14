@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.TimeZone;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -26,45 +28,53 @@ public class Entry implements Comparable<Entry>
 {  
   public Image thumbnailImage = null;
 
-  public class IconAction extends AbstractAction
-  {
-    public void actionPerformed(ActionEvent e)
-    {
-    }
-  }
-
   private File file;
   private NSDictionary rootDict;
 
   private int thumbnailWidth = 50;
   private int thumbnailHeight = 50;
   private JList thumbnailList;
-
-  private SwingWorker<Void, IconAction> loader = new SwingWorker<Void, IconAction>(){
-
-    @Override
-    protected Void doInBackground() throws Exception
-    {
-
-      Image photoImage = ImageIO.read(getPhotoFile());
-
-      BufferedImage resizedImg = new BufferedImage(thumbnailWidth, thumbnailHeight,
-          BufferedImage.TYPE_INT_RGB);
-      Graphics2D g2 = resizedImg.createGraphics();
-      g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
-          RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-      g2.drawImage(photoImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
-      g2.dispose();
-      thumbnailImage = resizedImg;
-      if (thumbnailList != null)
-      {        
-        thumbnailList.repaint();
-      }
-
-      //      publish(new IconAction(resizedImg));
-      return null;
-    }
-  };
+    
+  private Entry()
+  {
+    rootDict = new NSDictionary();
+  }
+  
+  public static Entry createNewEntry(File parentDirectory)
+  {
+    Entry entry = new Entry();
+    
+    entry.rootDict = new NSDictionary();
+    Date creationDate = new Date();
+    entry.rootDict.put("Creation Date", creationDate);
+    
+    NSDictionary creatorDict = new NSDictionary();
+    creatorDict.put("Device Agent","PC");
+    creatorDict.put("Generation Date", creationDate);
+    creatorDict.put("Host Name", "PC");
+    creatorDict.put("OS Agent", "PC");
+    creatorDict.put("Software Agent", "Day One Viewer");
+    entry.rootDict.put("Creator", creatorDict);
+    
+    entry.rootDict.put("Entry Text", "");
+    
+    NSDictionary locationDict = new NSDictionary();
+    locationDict.put("Administrative Area", "");
+    locationDict.put("Country", "");
+    locationDict.put("Latitude", 0.0);
+    locationDict.put("Locality", "");
+    locationDict.put("Longitude", 0.0);
+    locationDict.put("Place Name", "");
+    entry.rootDict.put("Location",locationDict);
+    
+    entry.rootDict.put("Starred",false);
+    entry.rootDict.put("Time Zone", TimeZone.getDefault().getDisplayName());
+    
+    entry.rootDict.put("UUID", UUID.randomUUID().toString());
+    entry.file = new File(parentDirectory,entry.getUUID() + ".doentry");
+    
+    return entry;
+  }
 
   public Entry(File file) throws Exception
   {
@@ -164,4 +174,43 @@ public class Entry implements Comparable<Entry>
   {
     rootDict.put("Entry Text", entryText);    
   }
+  
+  public class IconAction extends AbstractAction
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+    }
+  }
+  
+  private SwingWorker<Void, IconAction> loader = new SwingWorker<Void, IconAction>(){
+
+    @Override
+    protected Void doInBackground() throws Exception
+    {
+
+      Image photoImage = ImageIO.read(getPhotoFile());
+
+      BufferedImage resizedImg = new BufferedImage(thumbnailWidth, thumbnailHeight,
+          BufferedImage.TYPE_INT_RGB);
+      Graphics2D g2 = resizedImg.createGraphics();
+      g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+          RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+      g2.drawImage(photoImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
+      g2.dispose();
+      thumbnailImage = resizedImg;
+      if (thumbnailList != null)
+      {        
+        thumbnailList.repaint();
+      }
+
+      //      publish(new IconAction(resizedImg));
+      return null;
+    }
+  };
+
+  public File getFile()
+  {
+    return file;
+  }
+
 }

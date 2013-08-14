@@ -10,30 +10,8 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
 
-public class EntryDataModel extends ArrayList<Entry> implements ListModel 
+public class EntryDataModel extends DefaultListModel<Entry>
 {
-    
-  public void addListDataListener(ListDataListener l)
-  {
-    // TODO Auto-generated method stub
-    
-  }
-
-  public Object getElementAt(int index)
-  {
-    return get(index);
-  }
-
-  public int getSize()
-  {
-    return size();
-  }
-
-  public void removeListDataListener(ListDataListener l)
-  {
-    // TODO Auto-generated method stub
-    
-  }
   
   
 }

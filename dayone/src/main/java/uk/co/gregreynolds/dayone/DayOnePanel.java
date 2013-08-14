@@ -8,6 +8,7 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.SortOrder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -31,11 +33,13 @@ import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.UndoManager;
 
+import org.jdesktop.swingx.JXList;
+
 
 public class DayOnePanel extends JPanel implements ListSelectionListener
 {
   private JSplitPane splitPane;
-  private JList list;
+  private JXList list;
   private JTextArea text;
   private List<Entry> entries;
   private JPanel contentPanel;
@@ -45,6 +49,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JButton redoButton = new JButton("Redo");
   private JButton saveButton = new JButton("Save");
   private JButton newButton = new JButton("New");
+  private File parentDirectory;
   
   private UndoableEditListener undoListener = new UndoableEditListener() {
 
@@ -56,16 +61,20 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     }
   };
 
-  public DayOnePanel(List<Entry> entries)
+  public DayOnePanel(List<Entry> entries, File pd)
   {
     this.entries = entries;
+    this.parentDirectory = pd;
     EntryDataModel model = new EntryDataModel();
     for (Entry entry : entries) {
-      model.add(entry);
+      model.addElement(entry);
     }
-    Collections.sort(model,Collections.reverseOrder());
-    list = new JList(model);
-
+    list = new JXList(model);
+    list.setComparator(new EntryDateComparator());
+    list.setAutoCreateRowSorter(true);
+    list.setSortOrder(SortOrder.DESCENDING);
+    list.setSortsOnUpdates(true);
+    
     list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     list.setCellRenderer(new EntryCellRenderer(model));
 
@@ -156,21 +165,27 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       public void actionPerformed(ActionEvent e)
       {
         Entry entry = getCurrentEntry();
-        try
-        {
-          entry.save();
-        }
-        catch (IOException e1)
-        {
-          JOptionPane.showMessageDialog(contentPanel, 
-              "Could not save entry.");
-        }
-        
+        saveEntry(entry);        
       }
 
     });
+    
+    newButton.addActionListener(new ActionListener()
+    {
+      
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        Entry entry = Entry.createNewEntry(parentDirectory);
+        insertEntry(entry);
+        saveEntry(entry);  
+        list.setSelectedValue(entry, true);
+        
+      }
+    });
 
     contentPanel.add(textPanel,BorderLayout.CENTER);
+    
 
     splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, contentPanel);
     splitPane.setOneTouchExpandable(true);
@@ -187,6 +202,8 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   }
 
 
+
+
   protected void updateButtons()
   {
     undoButton.setText(undoManager.getUndoPresentationName());
@@ -198,10 +215,13 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
   public void valueChanged(ListSelectionEvent e)
   {
-    JList list = (JList)e.getSource();
-    EntryDataModel entries = (EntryDataModel)list.getModel();
-    Entry entry = entries.get(list.getSelectedIndex());
+    JXList list = (JXList)e.getSource();
+    Entry entry = (Entry)(list.getSelectedValue());
     undoManager.end();
+    if (entry == null)
+    {
+      return;
+    }
     text.getDocument().removeUndoableEditListener(undoListener);
     text.setText(entry.getEntryText());
     text.getDocument().addUndoableEditListener(undoListener);
@@ -247,8 +267,28 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
   private Entry getCurrentEntry()
   {
-    EntryDataModel entries = (EntryDataModel)list.getModel();
-    Entry entry = entries.get(list.getSelectedIndex());
-    return entry;
+    return (Entry)(list.getSelectedValue());    
   }
+
+  protected void insertEntry(Entry entry)
+  {
+    list.clearSelection();
+    EntryDataModel entries = (EntryDataModel)list.getModel();
+    entries.addElement(entry);
+  }
+
+  private void saveEntry(Entry entry)
+  {
+    try
+    {
+      entry.save();
+    }
+    catch (IOException e1)
+    {
+      JOptionPane.showMessageDialog(contentPanel, 
+          "Could not save entry.");
+    }
+  }
+  
+  
 }
