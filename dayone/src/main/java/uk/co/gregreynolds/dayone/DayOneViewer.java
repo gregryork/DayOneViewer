@@ -34,12 +34,10 @@ public class DayOneViewer
         }
         catch (FileNotFoundException e)
         {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
         catch (Exception e)
         {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
