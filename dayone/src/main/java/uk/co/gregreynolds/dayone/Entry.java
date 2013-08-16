@@ -6,6 +6,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Date;
@@ -58,14 +59,14 @@ public class Entry implements Comparable<Entry>
     
     entry.rootDict.put("Entry Text", "");
     
-    NSDictionary locationDict = new NSDictionary();
-    locationDict.put("Administrative Area", "");
-    locationDict.put("Country", "");
-    locationDict.put("Latitude", 0.0);
-    locationDict.put("Locality", "");
-    locationDict.put("Longitude", 0.0);
-    locationDict.put("Place Name", "");
-    entry.rootDict.put("Location",locationDict);
+//    NSDictionary locationDict = new NSDictionary();
+//    locationDict.put("Administrative Area", "");
+//    locationDict.put("Country", "");
+//    locationDict.put("Latitude", 0.0);
+//    locationDict.put("Locality", "");
+//    locationDict.put("Longitude", 0.0);
+//    locationDict.put("Place Name", "");
+//    entry.rootDict.put("Location",locationDict);
     
     entry.rootDict.put("Starred",false);
     entry.rootDict.put("Time Zone", TimeZone.getDefault().getDisplayName());
@@ -76,10 +77,17 @@ public class Entry implements Comparable<Entry>
     return entry;
   }
 
-  public Entry(File file) throws Exception
+  public Entry(File file) throws FileNotFoundException
   {
     this.file = file;
-    rootDict = (NSDictionary)PropertyListParser.parse(file);
+    try
+    {
+      rootDict = (NSDictionary)PropertyListParser.parse(file);
+    }
+    catch (Exception e)
+    {
+      throw new FileNotFoundException();
+    }
     loader.execute();
   }
 

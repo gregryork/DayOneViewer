@@ -9,12 +9,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -35,9 +39,13 @@ import javax.swing.undo.UndoManager;
 
 import org.jdesktop.swingx.JXList;
 
+import com.jhlabs.image.FourColorFilter;
+
 
 public class DayOnePanel extends JPanel implements ListSelectionListener
 {
+  private static final String JOURNAL_DIRECTORY = "JOURNAL_DIRECTORY";
+  
   private JSplitPane splitPane;
   private JXList list;
   private JTextArea text;
@@ -60,15 +68,71 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
     }
   };
-
-  public DayOnePanel(List<Entry> entries, File pd)
+  
+  private File getEntriesDirectory()
   {
-    this.entries = entries;
+    return new File(parentDirectory,"entries");
+  }
+  
+  private File getPhotosDirectory()
+  {
+    return new File(parentDirectory,"photos");
+  }
+  
+  public void changeParentDirectory(File pd) throws FileNotFoundException
+  {
+    if (!pd.isDirectory())
+    {
+      throw new FileNotFoundException();
+    }
+    parentDirectory = pd;
+    getEntriesDirectory().mkdir();
+    getPhotosDirectory().mkdir();
+    
     this.parentDirectory = pd;
+    entries = new ArrayList<Entry>();
+
+    final File[] listOfFiles = getEntriesDirectory().listFiles();
+    for (File file : listOfFiles) {      
+      entries.add(new Entry(file));
+    }
+    
+    if (list != null)
+    {
+      list.clearSelection();
+      list.setModel(getModelFromEntries());
+    }
+    
+    Preferences prefs = Preferences.userNodeForPackage(getClass());
+    prefs.put(JOURNAL_DIRECTORY, parentDirectory.toString());
+  }
+
+  private EntryDataModel getModelFromEntries()
+  {
     EntryDataModel model = new EntryDataModel();
     for (Entry entry : entries) {
       model.addElement(entry);
     }
+    return model;
+  }
+
+  public DayOnePanel(File pd) throws FileNotFoundException
+  {
+    Preferences prefs = Preferences.userNodeForPackage(getClass());
+    String journalFromPrefs = prefs.get(JOURNAL_DIRECTORY, pd.toString());
+
+    File journalFile = new File(journalFromPrefs);
+    
+    if (!journalFile.isDirectory())
+    {
+      chooseNewJournalDirectory();
+    }
+    else
+    {
+      changeParentDirectory(journalFile);      
+    }
+    
+    EntryDataModel model = getModelFromEntries();
     list = new JXList(model);
     list.setComparator(new EntryDateComparator());
     list.setAutoCreateRowSorter(true);
@@ -176,7 +240,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       @Override
       public void actionPerformed(ActionEvent e)
       {
-        Entry entry = Entry.createNewEntry(parentDirectory);
+        Entry entry = Entry.createNewEntry(getEntriesDirectory());
         insertEntry(entry);
         saveEntry(entry);  
         list.setSelectedValue(entry, true);
@@ -288,6 +352,30 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       JOptionPane.showMessageDialog(contentPanel, 
           "Could not save entry.");
     }
+  }
+  
+  public void chooseNewJournalDirectory() throws FileNotFoundException
+  {
+    File newParent = chooseJournalDirectory(this, parentDirectory);
+    if (newParent != null && !newParent.equals(parentDirectory)) {
+      changeParentDirectory(newParent);
+    }
+  }
+  
+  public static File chooseJournalDirectory(Component parent, File parentDirectory)
+  {
+    File returnValue = null;
+    JFileChooser chooser = new JFileChooser();
+    chooser.setCurrentDirectory(parentDirectory);
+    chooser.setDialogTitle("Day One Journal Location");
+    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    
+    chooser.setAcceptAllFileFilterUsed(false);
+    //    
+    if (chooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+      returnValue = chooser.getSelectedFile();
+    }
+    return returnValue;
   }
   
   
