@@ -12,7 +12,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.template.file>src/main/java/uk/co/gregreynolds/dayone/Version.java.template</version.template.file>
+		<version.template.file>src/main/resources/uk/co/gregreynolds/dayone/Version.java.template</version.template.file>
 		<version.file>src/main/java/uk/co/gregreynolds/dayone/Version.java</version.file>
 	</properties>
 
@@ -56,7 +56,7 @@
 				<version>1.4.0</version>
 				<executions>
 					<execution>
-						<phase>prepare-package</phase>
+						<phase>process-resources</phase>
 						<goals>
 							<goal>replace</goal>
 						</goals>
@@ -97,6 +97,37 @@
 							<version>1.0</version>
 						</dependency>
 					</dependencies>
+				</plugin>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											com.google.code.maven-replacer-plugin
+										</groupId>
+										<artifactId>
+											maven-replacer-plugin
+										</artifactId>
+										<versionRange>
+											[1.4.0,)
+										</versionRange>
+										<goals>
+											<goal>replace</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
