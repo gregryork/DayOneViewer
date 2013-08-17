@@ -25,8 +25,7 @@ public class NullEntry implements EntryInterface
   @Override
   public String getUUID()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return "";
   }
 
 

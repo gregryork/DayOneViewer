@@ -8,8 +8,8 @@ import javax.swing.DefaultListModel;
 
 public class EntryDataModel extends DefaultListModel<Entry>
 {
-  Map<Entry,EntryPhotoData> photoDataMap =
-      new HashMap<Entry,EntryPhotoData>();
+  Map<EntryInterface,EntryPhotoData> photoDataMap =
+      new HashMap<EntryInterface,EntryPhotoData>();
   private File photoDirectory;
   
   public EntryDataModel(File photoDirectory)
@@ -18,7 +18,7 @@ public class EntryDataModel extends DefaultListModel<Entry>
     this.photoDirectory = photoDirectory;
   }
 
-  public EntryPhotoData getEntryPhotoData(Entry entry)
+  public EntryPhotoData getEntryPhotoData(EntryInterface entry)
   {
     EntryPhotoData entryPhotoData = photoDataMap.get(entry);
     if (entryPhotoData == null)

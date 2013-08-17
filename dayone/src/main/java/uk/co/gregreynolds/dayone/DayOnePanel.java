@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,10 +13,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -53,6 +59,9 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JButton redoButton = new JButton("Redo");
   private JButton saveButton = new JButton("Save");
   private JButton newButton = new JButton("New");
+  
+  private JButton removePhotoButton = new JButton("Remove Photo");
+  private JButton changePhotoButton = new JButton("Change Photo");
   private File parentDirectory;
 
   private UndoableEditListener undoListener = new UndoableEditListener() {
@@ -149,8 +158,10 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     text.setWrapStyleWord(true);
     text.setLineWrap(true);
     JScrollPane textScrollPane = new JScrollPane(text);
+    JPanel photoPanel = new JPanel(new BorderLayout());
     photoLabel = new JLabel();
-    contentPanel.add(photoLabel,BorderLayout.NORTH);
+    photoPanel.add(photoLabel,BorderLayout.CENTER);
+    contentPanel.add(photoPanel,BorderLayout.NORTH);
     textPanel.add(textScrollPane, BorderLayout.CENTER);
 
     JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -194,6 +205,41 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       public void changedUpdate(DocumentEvent e)
       {
         updateEntry();
+      }
+    });
+    
+    JPanel east = new JPanel(new GridBagLayout());
+    JPanel photoButtonPanel = new JPanel(new GridLayout(2,1));
+    photoButtonPanel.add(removePhotoButton);
+    photoButtonPanel.add(changePhotoButton);
+    east.add(photoButtonPanel);
+    photoPanel.add(east,BorderLayout.EAST);
+    
+    changePhotoButton.addActionListener(new ActionListener()
+    {
+      
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        try
+        {
+          changePhoto();
+        }
+        catch (IOException e1)
+        {
+          // TODO Auto-generated catch block
+          e1.printStackTrace();
+        }
+      }
+    });
+    
+    removePhotoButton.addActionListener(new ActionListener()
+    {
+      
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        removePhoto();        
       }
     });
 
@@ -267,6 +313,62 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
 
 
+  protected void changePhoto() throws IOException
+  {
+    EntryInterface entry = getCurrentEntry();
+    JFileChooser chooser = new JFileChooser();
+    ImagePreviewPanel preview = new ImagePreviewPanel();
+    chooser.setAccessory(preview);
+    chooser.addPropertyChangeListener(preview);
+    File newPhoto = null;
+    if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+      newPhoto = chooser.getSelectedFile();
+    }
+    if (newPhoto != null)
+    {
+      String extension = "";
+      String fileName = newPhoto.toString();
+
+      int i = fileName.lastIndexOf('.');
+      if (i > 0) {
+          extension = fileName.substring(i+1);
+      }
+      
+      String uuid = entry.getUUID();
+      
+      if (uuid.equals(""))
+      {
+        return;
+      }
+      
+      File destPhoto = new File (getPhotosDirectory(),uuid + "." + extension);
+      
+      Files.copy(newPhoto.toPath(), destPhoto.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+      photoChanged(entry);
+    }
+  }
+  
+  protected void removePhoto()
+  {
+    EntryInterface entry = getCurrentEntry();
+    EntryDataModel model = (EntryDataModel)list.getModel();
+    File photoFile = model.getEntryPhotoData(entry).getPhotoFile();
+    
+    if (photoFile.isFile())
+    {
+      photoFile.delete();
+      photoChanged(entry);
+    }
+  }
+
+  private void photoChanged(EntryInterface entry)
+  {
+    EntryDataModel model = (EntryDataModel)list.getModel();
+    model.removeEntryPhotoData(entry);
+    list.repaint();
+    updatePhoto(entry);
+  }
+
   protected void updateButtons()
   {
     undoButton.setText(undoManager.getUndoPresentationName());
@@ -290,16 +392,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     undoManager = new UndoManager();
     updateButtons();
 
-    Image photo = updatePhoto(entry);
-
-    if (photo != null)
-    {
-      photoLabel.setIcon(new ImageIcon(photo));      
-    }
+    updatePhoto(entry);
 
   }
 
-  private Image updatePhoto(EntryInterface entry)
+  private void updatePhoto(EntryInterface entry)
   {
     Image photo = null;
     try
@@ -316,7 +413,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       photo = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
     }
-    return photo;
+    
+    if (photo != null)
+    {
+      photoLabel.setIcon(new ImageIcon(photo));      
+    }
   }
 
 
