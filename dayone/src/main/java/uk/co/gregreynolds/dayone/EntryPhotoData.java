@@ -22,7 +22,7 @@ public class EntryPhotoData
   }
 
 
-  public Entry entry;
+  public EntryInterface entry;
   public Image thumbnailImage;
   public File file;
   public int thumbnailWidth = 50;
@@ -30,7 +30,7 @@ public class EntryPhotoData
   public JList thumbnailList;
   private File photoDirectory;
   
-  EntryPhotoData(Entry entry, File photoDirectory)
+  EntryPhotoData(EntryInterface entry, File photoDirectory)
   {
     this.entry = entry;
     this.photoDirectory = photoDirectory;

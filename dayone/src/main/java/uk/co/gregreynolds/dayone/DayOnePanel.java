@@ -41,7 +41,7 @@ import org.jdesktop.swingx.JXList;
 public class DayOnePanel extends JPanel implements ListSelectionListener
 {
   private static final String JOURNAL_DIRECTORY = "JOURNAL_DIRECTORY";
-  
+
   private JSplitPane splitPane;
   private JXList list;
   private JTextArea text;
@@ -54,7 +54,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JButton saveButton = new JButton("Save");
   private JButton newButton = new JButton("New");
   private File parentDirectory;
-  
+
   private UndoableEditListener undoListener = new UndoableEditListener() {
 
     @Override
@@ -65,17 +65,17 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
     }
   };
-  
+
   private File getEntriesDirectory()
   {
     return new File(parentDirectory,"entries");
   }
-  
+
   private File getPhotosDirectory()
   {
     return new File(parentDirectory,"photos");
   }
-  
+
   public void changeParentDirectory(File pd) throws FileNotFoundException
   {
     if (!pd.isDirectory())
@@ -85,7 +85,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     parentDirectory = pd;
     getEntriesDirectory().mkdir();
     getPhotosDirectory().mkdir();
-    
+
     this.parentDirectory = pd;
     entries = new ArrayList<Entry>();
 
@@ -93,13 +93,13 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     for (File file : listOfFiles) {      
       entries.add(new Entry(file));
     }
-    
+
     if (list != null)
     {
       list.clearSelection();
       list.setModel(getModelFromEntries());
     }
-    
+
     Preferences prefs = Preferences.userNodeForPackage(getClass());
     prefs.put(JOURNAL_DIRECTORY, parentDirectory.toString());
   }
@@ -119,7 +119,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     String journalFromPrefs = prefs.get(JOURNAL_DIRECTORY, pd.toString());
 
     File journalFile = new File(journalFromPrefs);
-    
+
     if (!journalFile.isDirectory())
     {
       chooseNewJournalDirectory();
@@ -128,14 +128,14 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       changeParentDirectory(journalFile);      
     }
-    
+
     EntryDataModel model = getModelFromEntries();
     list = new JXList(model);
     list.setComparator(new EntryDateComparator());
     list.setAutoCreateRowSorter(true);
     list.setSortOrder(SortOrder.DESCENDING);
     list.setSortsOnUpdates(true);
-    
+
     list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     list.setCellRenderer(new EntryCellRenderer(model));
 
@@ -167,7 +167,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     text.getDocument().addUndoableEditListener(undoListener);
     text.getDocument().addDocumentListener(new DocumentListener()
     {
-      
+
       @Override
       public void removeUpdate(DocumentEvent e)
       {
@@ -177,26 +177,26 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
       private void updateEntry()
       {
-        Entry entry = getCurrentEntry();
+        EntryInterface entry = getCurrentEntry();
         String entryText = text.getText();
         entry.setEntryText(entryText);
       }
-      
-      
+
+
       @Override
       public void insertUpdate(DocumentEvent e)
       {
         updateEntry();
       }
-      
-      
+
+
       @Override
       public void changedUpdate(DocumentEvent e)
       {
         updateEntry();
       }
     });
-        
+
     undoButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -220,22 +220,22 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
         updateButtons();
       }
     });
-    
+
     saveButton.addActionListener(new ActionListener()
     {
-      
+
       @Override
       public void actionPerformed(ActionEvent e)
       {
-        Entry entry = getCurrentEntry();
+        EntryInterface entry = getCurrentEntry();
         saveEntry(entry);        
       }
 
     });
-    
+
     newButton.addActionListener(new ActionListener()
     {
-      
+
       @Override
       public void actionPerformed(ActionEvent e)
       {
@@ -243,12 +243,12 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
         insertEntry(entry);
         saveEntry(entry);  
         list.setSelectedValue(entry, true);
-        
+
       }
     });
 
     contentPanel.add(textPanel,BorderLayout.CENTER);
-    
+
 
     splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, contentPanel);
     splitPane.setOneTouchExpandable(true);
@@ -280,18 +280,27 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   public void valueChanged(ListSelectionEvent e)
   {
     JXList list = (JXList)e.getSource();
-    Entry entry = (Entry)(list.getSelectedValue());
+    EntryInterface entry = getCurrentEntry();
+
     undoManager.end();
-    if (entry == null)
-    {
-      return;
-    }
     text.getDocument().removeUndoableEditListener(undoListener);
     text.setText(entry.getEntryText());
     text.getDocument().addUndoableEditListener(undoListener);
+
     undoManager = new UndoManager();
     updateButtons();
 
+    Image photo = updatePhoto(entry);
+
+    if (photo != null)
+    {
+      photoLabel.setIcon(new ImageIcon(photo));      
+    }
+
+  }
+
+  private Image updatePhoto(EntryInterface entry)
+  {
     Image photo = null;
     try
     {
@@ -302,18 +311,12 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       // do nothing
     }
-    
+
     if (photo == null)
     {
       photo = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
     }
-    
-
-    if (photo != null)
-    {
-      photoLabel.setIcon(new ImageIcon(photo));      
-    }
-    
+    return photo;
   }
 
 
@@ -330,9 +333,14 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     return getSplitPane();
   }
 
-  private Entry getCurrentEntry()
+  private EntryInterface getCurrentEntry()
   {
-    return (Entry)(list.getSelectedValue());    
+    EntryInterface entry = (EntryInterface)(list.getSelectedValue());
+    if (entry == null)
+    {
+      entry = new NullEntry();
+    }
+    return entry;    
   }
 
   protected void insertEntry(Entry entry)
@@ -342,7 +350,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     entries.addElement(entry);
   }
 
-  private void saveEntry(Entry entry)
+  private void saveEntry(EntryInterface entry)
   {
     try
     {
@@ -354,7 +362,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
           "Could not save entry.");
     }
   }
-  
+
   public void chooseNewJournalDirectory() throws FileNotFoundException
   {
     File newParent = chooseJournalDirectory(this, parentDirectory);
@@ -362,7 +370,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       changeParentDirectory(newParent);
     }
   }
-  
+
   public static File chooseJournalDirectory(Component parent, File parentDirectory)
   {
     File returnValue = null;
@@ -370,7 +378,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     chooser.setCurrentDirectory(parentDirectory);
     chooser.setDialogTitle("Day One Journal Location");
     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    
+
     chooser.setAcceptAllFileFilterUsed(false);
     //    
     if (chooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
@@ -378,6 +386,6 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     }
     return returnValue;
   }
-  
-  
+
+
 }

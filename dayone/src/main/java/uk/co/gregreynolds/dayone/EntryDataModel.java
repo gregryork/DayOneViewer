@@ -29,7 +29,7 @@ public class EntryDataModel extends DefaultListModel<Entry>
     return entryPhotoData;
   }
   
-  public void removeEntryPhotoData(Entry entry)
+  public void removeEntryPhotoData(EntryInterface entry)
   {
     photoDataMap.remove(entry);
   }

@@ -10,7 +10,7 @@ import java.util.UUID;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
 
-public class Entry implements Comparable<Entry>
+public class Entry implements EntryInterface
 {  
   private File file;
   private NSDictionary rootDict;
@@ -69,40 +69,103 @@ public class Entry implements Comparable<Entry>
     }
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#getCreationDate()
+   */
+  @Override
   public Date getCreationDate()
   {
     return (Date) rootDict.objectForKey("Creation Date").toJavaObject();
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#getEntryText()
+   */
+  @Override
   public String getEntryText()
   {
     return rootDict.objectForKey("Entry Text").toString();
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#getUUID()
+   */
+  @Override
   public String getUUID()
   {
     return rootDict.objectForKey("UUID").toString();
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#compareTo(uk.co.gregreynolds.dayone.Entry)
+   */
   @Override
-  public int compareTo(Entry o)
+  public int compareTo(EntryInterface o)
   {
     return getCreationDate().compareTo(o.getCreationDate());
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#save()
+   */
+  @Override
   public void save() throws IOException
   {
     PropertyListParser.saveAsXML(rootDict, file);
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#setEntryText(java.lang.String)
+   */
+  @Override
   public void setEntryText(String entryText)
   {
     rootDict.put("Entry Text", entryText);    
   }
 
+  /* 
+   ** <PRE>
+   ** Release   Date     By  Proj   Ref      Description
+   ** --------- -------- --- ------ -------- --------------------------------------
+   ** </PRE>
+   * (non-Javadoc)
+   * @see uk.co.gregreynolds.dayone.EntryInterface#getFile()
+   */
+  @Override
   public File getFile()
   {
     return file;
   }
+
 
 }
