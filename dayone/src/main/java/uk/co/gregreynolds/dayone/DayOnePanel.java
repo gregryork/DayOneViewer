@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -20,7 +19,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -38,8 +36,6 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.UndoManager;
 
 import org.jdesktop.swingx.JXList;
-
-import com.jhlabs.image.FourColorFilter;
 
 
 public class DayOnePanel extends JPanel implements ListSelectionListener
@@ -61,6 +57,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   
   private UndoableEditListener undoListener = new UndoableEditListener() {
 
+    @Override
     public void undoableEditHappened(UndoableEditEvent e)
     {
       undoManager.addEdit(e.getEdit());
@@ -109,7 +106,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
   private EntryDataModel getModelFromEntries()
   {
-    EntryDataModel model = new EntryDataModel();
+    EntryDataModel model = new EntryDataModel(getPhotosDirectory());
     for (Entry entry : entries) {
       model.addElement(entry);
     }
@@ -201,6 +198,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     });
         
     undoButton.addActionListener(new ActionListener() {
+      @Override
       public void actionPerformed(ActionEvent e) {
         try {
           undoManager.undo();
@@ -212,6 +210,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     });
 
     redoButton.addActionListener(new ActionListener() {
+      @Override
       public void actionPerformed(ActionEvent e) {
         try {
           undoManager.redo();
@@ -277,6 +276,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   }
 
 
+  @Override
   public void valueChanged(ListSelectionEvent e)
   {
     JXList list = (JXList)e.getSource();
@@ -295,7 +295,8 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     Image photo = null;
     try
     {
-      photo = entry.getPhotoScaledToHeight(300);
+      EntryPhotoData photoData = new EntryPhotoData(entry,getPhotosDirectory());
+      photo = photoData.getPhotoScaledToHeight(300);
     }
     catch (IOException e1)
     {

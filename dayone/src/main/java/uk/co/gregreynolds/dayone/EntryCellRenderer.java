@@ -17,6 +17,7 @@ public class EntryCellRenderer extends JLabel implements ListCellRenderer
     this.setOpaque(true);
   }
 
+  @Override
   public Component getListCellRendererComponent(JList list,
       Object value,
       int index,
@@ -34,7 +35,8 @@ public class EntryCellRenderer extends JLabel implements ListCellRenderer
     }
     SimpleDateFormat format = new SimpleDateFormat();
     setText(format.format(selectedEntry.getCreationDate().getTime()));
-    setIcon(selectedEntry.getThumbnail(list));
+    
+    setIcon((model.getEntryPhotoData(selectedEntry)).getThumbnail(list));
     return this;
   }
 }

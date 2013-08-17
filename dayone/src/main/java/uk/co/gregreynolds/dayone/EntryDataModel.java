@@ -1,17 +1,36 @@
 package uk.co.gregreynolds.dayone;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.DefaultListModel;
-import javax.swing.ListModel;
-import javax.swing.event.ListDataListener;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
 
 public class EntryDataModel extends DefaultListModel<Entry>
 {
+  Map<Entry,EntryPhotoData> photoDataMap =
+      new HashMap<Entry,EntryPhotoData>();
+  private File photoDirectory;
   
+  public EntryDataModel(File photoDirectory)
+  {
+    super();
+    this.photoDirectory = photoDirectory;
+  }
+
+  public EntryPhotoData getEntryPhotoData(Entry entry)
+  {
+    EntryPhotoData entryPhotoData = photoDataMap.get(entry);
+    if (entryPhotoData == null)
+    {
+      entryPhotoData = new EntryPhotoData(entry,photoDirectory);
+      photoDataMap.put(entry, entryPhotoData);
+    }
+    return entryPhotoData;
+  }
   
+  public void removeEntryPhotoData(Entry entry)
+  {
+    photoDataMap.remove(entry);
+  }
 }
