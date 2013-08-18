@@ -419,6 +419,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     EntryInterface entry = getCurrentEntry();
     EntryDataModel model = (EntryDataModel)list.getModel();
     File photoFile = model.getEntryPhotoData(entry).getPhotoFile();
+    
+    if (photoFile == null)
+    {
+      return;
+    }
 
     if (photoFile.isFile())
     {
