@@ -3,11 +3,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.TransferHandler;
 
 
 public class DayOneViewer
@@ -47,8 +52,11 @@ public class DayOneViewer
 
   private static void createAndShowGUI(File parentDirectory) throws Exception
   {
+    
     //Create and set up the window.
-    JFrame frame = new JFrame("Day One");
+    final JFrame frame = new JFrame("Day One");
+    PhotoTransferHandler photoHandler = new PhotoTransferHandler();
+    frame.setTransferHandler(photoHandler);
     DayOneMenu menu = new DayOneMenu(frame);
     frame.setJMenuBar(menu);
 
@@ -56,6 +64,26 @@ public class DayOneViewer
     final DayOnePanel panel = new DayOnePanel(parentDirectory);
     frame.getContentPane().add(panel.getInterfacePane());
     
+    photoHandler.addfileTransferAction(new Observer(){
+      
+      @Override
+      public void update(Observable o,
+          Object arg)
+      {
+        if (arg instanceof File)
+        {
+          File file = (File)arg;
+          try
+          {
+            panel.updateCurrentEntryPhoto(file);
+          }
+          catch (IOException e)
+          {
+            JOptionPane.showMessageDialog(frame, 
+                "Could not import photo.");
+          }
+        }
+      }});
     menu.getDirectoryLocationItem().addActionListener(new ActionListener()
     {
       

@@ -1,3 +1,0 @@
-build_number=@buildnumber@
-build_time=@buildtime@
-pomversion=@pomversion@

@@ -324,31 +324,44 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
       newPhoto = chooser.getSelectedFile();
     }
-    if (newPhoto != null)
-    {
-      String extension = "";
-      String fileName = newPhoto.toString();
+    updatePhoto(entry, newPhoto);
+  }
+  
+  public void updateCurrentEntryPhoto(File newPhoto) throws IOException
+  {
+    EntryInterface entry = getCurrentEntry();
+    updatePhoto(entry, newPhoto);
+  }
 
-      int i = fileName.lastIndexOf('.');
-      if (i > 0) {
-          extension = fileName.substring(i+1);
-      }
-      
-      String uuid = entry.getUUID();
-      
-      if (uuid.equals(""))
-      {
-        return;
-      }
-      
-      File destPhoto = new File (getPhotosDirectory(),uuid + "." + extension);
-      
-      Files.copy(newPhoto.toPath(), destPhoto.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
-      photoChanged(entry);
+  private void updatePhoto(EntryInterface entry,
+      File newPhoto) throws IOException
+  {
+    if (newPhoto == null)
+    {
+      return;
     }
+    String uuid = entry.getUUID();
+    if (uuid.equals(""))
+    {
+      return;
+    }
+      
+    String extension = "";
+    String fileName = newPhoto.toString();
+
+    int i = fileName.lastIndexOf('.');
+    if (i > 0) {
+      extension = fileName.substring(i+1);
+    }
+
+    File destPhoto = new File (getPhotosDirectory(),uuid + "." + extension);
+
+    Files.copy(newPhoto.toPath(), destPhoto.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+    photoChanged(entry);
   }
   
   protected void removePhoto()
+  
   {
     EntryInterface entry = getCurrentEntry();
     EntryDataModel model = (EntryDataModel)list.getModel();

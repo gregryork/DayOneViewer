@@ -10,6 +10,7 @@
 	</scm>
 
 
+
 	<groupId>uk.co.gregreynolds</groupId>
 	<artifactId>dayone</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
@@ -22,9 +23,22 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.template.file>src/main/resources/uk/co/gregreynolds/dayone/Version.properties.template</version.template.file>
 		<version.file>src/main/resources/uk/co/gregreynolds/dayone/Version.properties</version.file>
+		<maven.build.timestamp.format>yyMMdd_HHmm</maven.build.timestamp.format>
+		<buildTime>${maven.build.timestamp}</buildTime>
 	</properties>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+					<!-- include any other file types you want to filter -->
+				</includes>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -41,8 +55,7 @@
 				<configuration>
 					<doCheck>false</doCheck>
 					<doUpdate>false</doUpdate>
-					<revisionOnScmFailure>true</revisionOnScmFailure>
-					<format>{0,date,yyyy-MM-dd_HH-mm}_{1}</format>
+					<revisionOnScmFailure>NA</revisionOnScmFailure>					
 					<items>
 						<item>timestamp</item>
 						<item>${user.name}</item>
@@ -80,38 +93,6 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>com.google.code.maven-replacer-plugin</groupId>
-				<artifactId>maven-replacer-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-					<execution>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>replace</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<file>${version.template.file}</file>
-					<outputFile>${version.file}</outputFile>
-					<replacements>
-						<replacement>
-							<token>@buildnumber@</token>
-							<value>${buildNumber}</value>
-						</replacement>
-						<replacement>
-							<token>@buildtime@</token>
-							<value>${maven.build.timestamp}</value>
-						</replacement>
-						<replacement>
-							<token>@pomversion@</token>
-							<value>${project.version}</value>
-						</replacement>
-					</replacements>
-				</configuration>
 			</plugin>
 
 		</plugins>
