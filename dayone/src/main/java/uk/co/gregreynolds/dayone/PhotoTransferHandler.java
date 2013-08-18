@@ -1,5 +1,6 @@
 package uk.co.gregreynolds.dayone;
 
+import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
@@ -16,14 +17,20 @@ public class PhotoTransferHandler extends TransferHandler
 {
   private class PhotoObservable extends Observable
   {
-    public void updateFile(File file)
+    public void update(File file)
     {
       setChanged();
       notifyObservers(file);
     }
+    
+    public void update(Image image)
+    {
+      setChanged();
+      notifyObservers(image);
+    }
   }
   
-  PhotoObservable fileTransferActions = new PhotoObservable();
+  PhotoObservable transferObserver = new PhotoObservable();
 
   @Override
   public boolean importData(TransferSupport support)
@@ -31,14 +38,23 @@ public class PhotoTransferHandler extends TransferHandler
     if (!canImport(support)) {
         return false;
     }
+    
     try
     {
-      List data = (List)support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
       
-      for (Object elt : data) {
-        File file = (File)elt;
-        fileTransferActions.updateFile(file);
-        break;
+      if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+      {
+        List data = (List)support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+      
+        for (Object elt : data) {
+          File file = (File)elt;
+          transferObserver.update(file);        
+        }
+      }
+      else if (support.isDataFlavorSupported(DataFlavor.imageFlavor))
+      {
+        Image image = (Image)support.getTransferable().getTransferData(DataFlavor.imageFlavor);
+        transferObserver.update(image);
       }
     }
     catch (UnsupportedFlavorException | IOException e)
@@ -52,12 +68,13 @@ public class PhotoTransferHandler extends TransferHandler
   @Override
   public boolean canImport(TransferSupport support)
   {
-    return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
+    return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
+        support.isDataFlavorSupported(DataFlavor.imageFlavor);
   }
   
   public void addfileTransferAction(Observer action)
   {
-    fileTransferActions.addObserver(action);
+    transferObserver.addObserver(action);
   }
 
 }

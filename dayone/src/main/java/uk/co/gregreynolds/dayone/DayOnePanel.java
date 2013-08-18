@@ -4,9 +4,13 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -17,8 +21,12 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -32,6 +40,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SortOrder;
+import javax.swing.TransferHandler;
+import javax.swing.TransferHandler.TransferSupport;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -59,9 +69,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JButton redoButton = new JButton("Redo");
   private JButton saveButton = new JButton("Save");
   private JButton newButton = new JButton("New");
-  
+
   private JButton removePhotoButton = new JButton("Remove Photo");
   private JButton changePhotoButton = new JButton("Change Photo");
+  private JButton pastePhotoButton = new JButton("Paste Photo");
+
   private File parentDirectory;
 
   private UndoableEditListener undoListener = new UndoableEditListener() {
@@ -207,17 +219,18 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
         updateEntry();
       }
     });
-    
+
     JPanel east = new JPanel(new GridBagLayout());
-    JPanel photoButtonPanel = new JPanel(new GridLayout(2,1));
+    JPanel photoButtonPanel = new JPanel(new GridLayout(3,1));
     photoButtonPanel.add(removePhotoButton);
     photoButtonPanel.add(changePhotoButton);
+    photoButtonPanel.add(pastePhotoButton);
     east.add(photoButtonPanel);
     photoPanel.add(east,BorderLayout.EAST);
-    
+
     changePhotoButton.addActionListener(new ActionListener()
     {
-      
+
       @Override
       public void actionPerformed(ActionEvent e)
       {
@@ -232,14 +245,26 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
         }
       }
     });
-    
+
     removePhotoButton.addActionListener(new ActionListener()
     {
-      
+
       @Override
       public void actionPerformed(ActionEvent e)
       {
         removePhoto();        
+      }
+    });
+
+    pastePhotoButton.addActionListener(new ActionListener()
+    {
+
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        TransferHandler th = getTransferHandler();
+        Action action = th.getPasteAction();
+        action.actionPerformed(new ActionEvent(DayOnePanel.this,e.getID() , e.getActionCommand()));
       }
     });
 
@@ -310,9 +335,6 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     list.setSelectedIndex(0);
   }
 
-
-
-
   protected void changePhoto() throws IOException
   {
     EntryInterface entry = getCurrentEntry();
@@ -326,15 +348,20 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     }
     updatePhoto(entry, newPhoto);
   }
-  
+
   public void updateCurrentEntryPhoto(File newPhoto) throws IOException
   {
     EntryInterface entry = getCurrentEntry();
     updatePhoto(entry, newPhoto);
   }
 
-  private void updatePhoto(EntryInterface entry,
-      File newPhoto) throws IOException
+  public void updateCurrentEntryPhoto(Image newPhoto) throws IOException
+  {
+    EntryInterface entry = getCurrentEntry();
+    updatePhoto(newPhoto, entry);
+  }
+
+  private void updatePhoto(Image newPhoto, EntryInterface entry) throws IOException
   {
     if (newPhoto == null)
     {
@@ -345,7 +372,33 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       return;
     }
-      
+    File destPhoto = new File (getPhotosDirectory(),uuid + ".png");
+    int w = newPhoto.getWidth(null);
+    int h = newPhoto.getHeight(null);
+    int type = BufferedImage.TYPE_INT_RGB;  // other options
+    BufferedImage dest = new BufferedImage(w, h, type);
+    Graphics2D g2 = dest.createGraphics();
+    g2.drawImage(newPhoto, 0, 0, null);
+    g2.dispose();
+    removePhoto();
+    ImageIO.write(dest, "png", destPhoto);
+    photoChanged(entry);
+  }
+
+  private void updatePhoto(EntryInterface entry,
+      File newPhoto) throws IOException
+      {
+    if (newPhoto == null)
+    {
+      return;
+    }
+    String uuid = entry.getUUID();
+    if (uuid.equals(""))
+    {
+      return;
+    }
+
+    removePhoto();
     String extension = "";
     String fileName = newPhoto.toString();
 
@@ -358,15 +411,15 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
 
     Files.copy(newPhoto.toPath(), destPhoto.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
     photoChanged(entry);
-  }
-  
+      }
+
   protected void removePhoto()
-  
+
   {
     EntryInterface entry = getCurrentEntry();
     EntryDataModel model = (EntryDataModel)list.getModel();
     File photoFile = model.getEntryPhotoData(entry).getPhotoFile();
-    
+
     if (photoFile.isFile())
     {
       photoFile.delete();
@@ -426,7 +479,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       photo = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
     }
-    
+
     if (photo != null)
     {
       photoLabel.setIcon(new ImageIcon(photo));      
@@ -501,5 +554,41 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     return returnValue;
   }
 
+  public Observer getPhotoObserver()
+  {
+    return new Observer(){
 
+      @Override
+      public void update(Observable o,
+          Object arg)
+      {
+        if (arg instanceof File)
+        {
+          File file = (File)arg;
+          try
+          {
+            updateCurrentEntryPhoto(file);
+          }
+          catch (IOException e)
+          {
+            JOptionPane.showMessageDialog(DayOnePanel.this, 
+                "Could not import photo.");
+          }
+        }
+        if (arg instanceof Image)
+        {
+          Image image = (Image)arg;
+          try
+          {
+            updateCurrentEntryPhoto(image);
+          }
+          catch (IOException e)
+          {
+            JOptionPane.showMessageDialog(DayOnePanel.this, 
+                "Could not import photo.");
+          }
+        }
+      }   
+    };
+  }
 }

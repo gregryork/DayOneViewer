@@ -63,27 +63,9 @@ public class DayOneViewer
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     final DayOnePanel panel = new DayOnePanel(parentDirectory);
     frame.getContentPane().add(panel.getInterfacePane());
+    panel.setTransferHandler(photoHandler);
     
-    photoHandler.addfileTransferAction(new Observer(){
-      
-      @Override
-      public void update(Observable o,
-          Object arg)
-      {
-        if (arg instanceof File)
-        {
-          File file = (File)arg;
-          try
-          {
-            panel.updateCurrentEntryPhoto(file);
-          }
-          catch (IOException e)
-          {
-            JOptionPane.showMessageDialog(frame, 
-                "Could not import photo.");
-          }
-        }
-      }});
+    photoHandler.addfileTransferAction(panel.getPhotoObserver());
     menu.getDirectoryLocationItem().addActionListener(new ActionListener()
     {
       
