@@ -53,8 +53,10 @@ public class DayOneMenu extends JMenuBar
       @Override
       public void actionPerformed(ActionEvent e)
       {
-        String message = "DayOneViewer\n© Greg Reynolds\nVersion: " + Version.pomversion +
-            "\nBuild time: " + Version.build_time;
+        Version version = new Version();
+        String message = "DayOneViewer\n© Greg Reynolds\nVersion: " + version.getPomVersion() +
+            "\nBuild time: " + version.getBuildTime() +
+            "\nBuild number: " + version.getBuildNumber();
         JOptionPane.showMessageDialog(parent, message,"About",JOptionPane.INFORMATION_MESSAGE);
       }
     });

@@ -1,11 +1,56 @@
 package uk.co.gregreynolds.dayone;
 
-public final class Version {
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Properties;
 
-    public static final String build_number="";
+public class Version {
+    String buildNumber = "N/A";
+    String buildTime = "N/A";
+    String pomVersion = "N/A";
+    
+    public Version()
+    {
+      super();
+      
+      Properties versionProperties = new Properties();
+      String fileName = "uk/co/gregreynolds/dayone/Version.properties";
+      
+      InputStream properties = this.getClass().getClassLoader().getResourceAsStream(fileName);
+      
+      if (properties != null)
+      {
+        try
+        {
+          versionProperties.load(properties);
+          buildNumber = versionProperties.getProperty("build_number", "N/A");
+          pomVersion = versionProperties.getProperty("pomversion", "N/A");
+          buildTime = versionProperties.getProperty("build_time", "N/A");
 
-    public static final String build_time="20130817-0252";
+        }
+        catch (IOException e)
+        {
+          // do nothing
+        }
+      }
+    }
 
-    public static final String pomversion="0.0.2-SNAPSHOT";
+    public String getBuildNumber()
+    {
+      return buildNumber;
+    }
+
+    public String getBuildTime()
+    {
+      return buildTime;
+    }
+
+    public String getPomVersion()
+    {
+      return pomVersion;
+    }
+    
+    
 
 }

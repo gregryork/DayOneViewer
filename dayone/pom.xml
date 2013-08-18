@@ -2,6 +2,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<scm>
+		<url>scm:git:https://github.com/gregryork/DayOneViewer</url>
+		<developerConnection>scm:git:https://github.com/gregryork/DayOneViewer</developerConnection>
+
+		<tag>master</tag>
+	</scm>
+
+
 	<groupId>uk.co.gregreynolds</groupId>
 	<artifactId>dayone</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
@@ -12,12 +20,36 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.template.file>src/main/resources/uk/co/gregreynolds/dayone/Version.java.template</version.template.file>
-		<version.file>src/main/java/uk/co/gregreynolds/dayone/Version.java</version.file>
+		<version.template.file>src/main/resources/uk/co/gregreynolds/dayone/Version.properties.template</version.template.file>
+		<version.file>src/main/resources/uk/co/gregreynolds/dayone/Version.properties</version.file>
 	</properties>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
+					<revisionOnScmFailure>true</revisionOnScmFailure>
+					<format>{0,date,yyyy-MM-dd_HH-mm}_{1}</format>
+					<items>
+						<item>timestamp</item>
+						<item>${user.name}</item>
+					</items>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -68,7 +100,7 @@
 					<replacements>
 						<replacement>
 							<token>@buildnumber@</token>
-							<value>${svn.revision}</value>
+							<value>${buildNumber}</value>
 						</replacement>
 						<replacement>
 							<token>@buildtime@</token>
@@ -98,7 +130,8 @@
 						</dependency>
 					</dependencies>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -158,5 +191,4 @@
 			<url>scp://langurmonkey.no-ip.org/var/www/dayone/</url>
 		</site>
 	</distributionManagement>
-
 </project>
