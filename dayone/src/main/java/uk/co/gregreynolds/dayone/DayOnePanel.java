@@ -358,10 +358,16 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   public void updateCurrentEntryPhoto(Image newPhoto) throws IOException
   {
     EntryInterface entry = getCurrentEntry();
-    updatePhoto(newPhoto, entry);
+    updatePhoto(entry, newPhoto);
+  }
+  
+  private void updatePhoto(EntryInterface entry, File file) throws IOException
+  {
+    Image photo = ImageIO.read(file);
+    updatePhoto(entry, photo);
   }
 
-  private void updatePhoto(Image newPhoto, EntryInterface entry) throws IOException
+  private void updatePhoto(EntryInterface entry, Image newPhoto) throws IOException
   {
     if (newPhoto == null)
     {
@@ -372,7 +378,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       return;
     }
-    File destPhoto = new File (getPhotosDirectory(),uuid + ".png");
+    File destPhoto = new File (getPhotosDirectory(),uuid + ".jpg");
     int w = newPhoto.getWidth(null);
     int h = newPhoto.getHeight(null);
     int type = BufferedImage.TYPE_INT_RGB;  // other options
@@ -381,37 +387,9 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     g2.drawImage(newPhoto, 0, 0, null);
     g2.dispose();
     removePhoto();
-    ImageIO.write(dest, "png", destPhoto);
+    ImageIO.write(dest, "jpg", destPhoto);
     photoChanged(entry);
   }
-
-  private void updatePhoto(EntryInterface entry,
-      File newPhoto) throws IOException
-      {
-    if (newPhoto == null)
-    {
-      return;
-    }
-    String uuid = entry.getUUID();
-    if (uuid.equals(""))
-    {
-      return;
-    }
-
-    removePhoto();
-    String extension = "";
-    String fileName = newPhoto.toString();
-
-    int i = fileName.lastIndexOf('.');
-    if (i > 0) {
-      extension = fileName.substring(i+1);
-    }
-
-    File destPhoto = new File (getPhotosDirectory(),uuid + "." + extension);
-
-    Files.copy(newPhoto.toPath(), destPhoto.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
-    photoChanged(entry);
-      }
 
   protected void removePhoto()
 
