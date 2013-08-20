@@ -118,7 +118,16 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     if (list != null)
     {
       list.clearSelection();
-      list.setModel(getModelFromEntries());
+      EntryDataModel model = (EntryDataModel)list.getModel();
+      model.clear();
+      model.setPhotoDirectory(getPhotosDirectory());
+      for (Entry entry : entries) {
+        model.addElement(entry);
+      }
+      if (!model.isEmpty())
+      {
+        list.setSelectedIndex(0);
+      }
     }
 
     Preferences prefs = Preferences.userNodeForPackage(getClass());

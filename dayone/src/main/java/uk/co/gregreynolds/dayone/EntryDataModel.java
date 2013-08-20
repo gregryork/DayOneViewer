@@ -33,4 +33,10 @@ public class EntryDataModel extends DefaultListModel<Entry>
   {
     photoDataMap.remove(entry);
   }
+
+  public void setPhotoDirectory(File photoDirectory)
+  {
+    photoDataMap.clear();
+    this.photoDirectory = photoDirectory;    
+  }
 }
