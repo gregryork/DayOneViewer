@@ -355,7 +355,10 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
       newPhoto = chooser.getSelectedFile();
     }
-    updatePhoto(entry, newPhoto);
+    if (newPhoto != null)
+    {
+      updatePhoto(entry, newPhoto);
+    }
   }
 
   public void updateCurrentEntryPhoto(File newPhoto) throws IOException
@@ -372,6 +375,18 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   
   private void updatePhoto(EntryInterface entry, File file) throws IOException
   {
+    if (file == null)
+    {
+      return;
+    }
+    if (!file.isFile())
+    {
+      return;
+    }
+    if (!file.canRead())
+    {
+      return;
+    }
     Image photo = ImageIO.read(file);
     updatePhoto(entry, photo);
   }
