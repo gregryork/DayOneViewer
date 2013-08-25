@@ -75,6 +75,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
   private JButton pastePhotoButton = new JButton("Paste Photo");
 
   private File parentDirectory;
+  private DirectoryWatcher watcher;
 
   private UndoableEditListener undoListener = new UndoableEditListener() {
 
@@ -97,7 +98,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     return new File(parentDirectory,"photos");
   }
 
-  public void changeParentDirectory(File pd) throws FileNotFoundException
+  public void changeParentDirectory(File pd) throws IOException
   {
     if (!pd.isDirectory())
     {
@@ -106,6 +107,8 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     parentDirectory = pd;
     getEntriesDirectory().mkdir();
     getPhotosDirectory().mkdir();
+    
+    watcher.watchDirectory(getPhotosDirectory(), getWatchedPhotoObserver());
 
     this.parentDirectory = pd;
     entries = new ArrayList<Entry>();
@@ -143,10 +146,11 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     return model;
   }
 
-  public DayOnePanel(File pd) throws FileNotFoundException
+  public DayOnePanel(File pd) throws IOException
   {
     Preferences prefs = Preferences.userNodeForPackage(getClass());
     String journalFromPrefs = prefs.get(JOURNAL_DIRECTORY, pd.toString());
+    watcher = new DirectoryWatcher();
 
     File journalFile = new File(journalFromPrefs);
 
@@ -537,7 +541,7 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     }
   }
 
-  public void chooseNewJournalDirectory() throws FileNotFoundException
+  public void chooseNewJournalDirectory() throws IOException
   {
     File newParent = chooseJournalDirectory(this, parentDirectory);
     if (newParent != null && !newParent.equals(parentDirectory)) {
@@ -598,4 +602,34 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       }   
     };
   }
+  
+  public Observer getWatchedPhotoObserver()
+  {
+    return new Observer(){
+
+      @Override
+      public void update(Observable o,
+          Object arg)
+      {
+        if (arg instanceof File)
+        {
+          File file = (File)arg;
+          EntryDataModel model = (EntryDataModel)list.getModel();
+          EntryInterface entry = model.getEntryByUUID(file.toString());           
+          model.removeEntryPhotoData(entry);
+          list.repaint();
+          if (entry == getCurrentEntry())
+          {
+            updatePhoto(entry);
+          }
+        }        
+      }   
+    };
+  }
+
+  public void startWatching()
+  {
+    watcher.startWatching();
+  }
+  
 }

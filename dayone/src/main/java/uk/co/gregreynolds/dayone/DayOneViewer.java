@@ -84,6 +84,8 @@ public class DayOneViewer
         
       }
     });
+    
+    panel.startWatching();
 
     //Display the window.
     frame.pack();

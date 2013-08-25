@@ -1,12 +1,13 @@
 package uk.co.gregreynolds.dayone;
 import java.io.File;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.DefaultListModel;
 
 
-public class EntryDataModel extends DefaultListModel<Entry>
+public class EntryDataModel extends DefaultListModel<EntryInterface>
 {
   Map<EntryInterface,EntryPhotoData> photoDataMap =
       new HashMap<EntryInterface,EntryPhotoData>();
@@ -38,5 +39,21 @@ public class EntryDataModel extends DefaultListModel<Entry>
   {
     photoDataMap.clear();
     this.photoDirectory = photoDirectory;    
+  }
+  
+  public EntryInterface getEntryByUUID(String uuid)
+  {
+    EntryInterface entry = new NullEntry();
+    Enumeration<EntryInterface> elements = this.elements();
+    while (elements.hasMoreElements())
+    {
+      EntryInterface elt = elements.nextElement();
+      if (uuid.contains(elt.getUUID()))
+      {
+        entry = elt;
+        break;
+      }
+    }
+    return entry;
   }
 }
