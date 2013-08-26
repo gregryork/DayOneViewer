@@ -14,6 +14,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JList;
 import javax.swing.SwingWorker;
 
+import org.jdesktop.swingx.JXList;
+
 public class EntryPhotoData
 {
   public class IconAction
@@ -27,7 +29,7 @@ public class EntryPhotoData
   public File file;
   public int thumbnailWidth = 50;
   public int thumbnailHeight = 50;
-  public JList thumbnailList;
+  public JXList thumbnailList;
   private File photoDirectory;
   
   EntryPhotoData(EntryInterface entry, File photoDirectory)
@@ -53,9 +55,17 @@ public class EntryPhotoData
       g2.drawImage(photoImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
       g2.dispose();
       thumbnailImage = resizedImg;
+      
       if (thumbnailList != null)
-      {        
-        thumbnailList.repaint();
+      {
+        EntryDataModel model = (EntryDataModel)thumbnailList.getModel();
+        int index = model.indexOf(entry);
+        if (index > 0)
+        {
+          index = thumbnailList.convertIndexToView(index);        
+          thumbnailList.repaint(thumbnailList.getCellBounds(index, index));
+          thumbnailList.repaint();
+        }
       }  
       return null;
     }
@@ -63,7 +73,7 @@ public class EntryPhotoData
 
   public Icon getThumbnail(JList list)  
   {
-    thumbnailList = list;
+    thumbnailList = (JXList) list;
     Icon icon = null;
     if (thumbnailImage == null)
     {
