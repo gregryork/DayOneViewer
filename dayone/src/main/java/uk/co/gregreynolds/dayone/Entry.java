@@ -167,5 +167,11 @@ public class Entry implements EntryInterface
     return file;
   }
 
+  @Override
+  public boolean photoFilenameAccept(String name)
+  {
+    return name.startsWith(getUUID());
+  }
+
 
 }

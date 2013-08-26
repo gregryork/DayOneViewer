@@ -59,4 +59,11 @@ public class NullEntry implements EntryInterface
     return null;
   }
 
+
+  @Override
+  public boolean photoFilenameAccept(String name)
+  {
+    return false;
+  }
+
 }

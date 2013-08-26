@@ -28,4 +28,7 @@ public interface EntryInterface
 
   public abstract File getFile();
 
+
+  public abstract boolean photoFilenameAccept(String name);
+
 }

@@ -104,11 +104,18 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     {
       throw new FileNotFoundException();
     }
+    if (parentDirectory != null)
+    {
+      watcher.stopWatchingDirectory(getPhotosDirectory());
+      watcher.stopWatchingDirectory(getEntriesDirectory());
+    }
+    
     parentDirectory = pd;
     getEntriesDirectory().mkdir();
     getPhotosDirectory().mkdir();
     
     watcher.watchDirectory(getPhotosDirectory(), getWatchedPhotoObserver());
+    watcher.watchDirectory(getEntriesDirectory(), getWatchedEntryObserver());
 
     this.parentDirectory = pd;
     entries = new ArrayList<Entry>();
@@ -136,6 +143,8 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     Preferences prefs = Preferences.userNodeForPackage(getClass());
     prefs.put(JOURNAL_DIRECTORY, parentDirectory.toString());
   }
+
+  
 
   private EntryDataModel getModelFromEntries()
   {
@@ -211,12 +220,6 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
       }
 
 
-      private void updateEntry()
-      {
-        EntryInterface entry = getCurrentEntry();
-        String entryText = text.getText();
-        entry.setEntryText(entryText);
-      }
 
 
       @Override
@@ -346,6 +349,13 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     //Provide a preferred size for the split pane.
     splitPane.setPreferredSize(new Dimension(800, 600));    
     list.setSelectedIndex(0);
+  }
+  
+  private void updateEntry()
+  {
+    EntryInterface entry = getCurrentEntry();
+    String entryText = text.getText();
+    entry.setEntryText(entryText);
   }
 
   protected void changePhoto() throws IOException
@@ -627,6 +637,67 @@ public class DayOnePanel extends JPanel implements ListSelectionListener
     };
   }
 
+  private Observer getWatchedEntryObserver()
+  {
+    return new Observer(){
+
+      @Override
+      public void update(Observable o,
+          Object arg)
+      {
+        if (arg instanceof File)
+        {
+          File file = (File)arg;
+          EntryDataModel model = (EntryDataModel)list.getModel();
+          EntryInterface entry = model.getEntryByUUID(file.toString());
+          boolean isCurrentSelection = (entry == getCurrentEntry());
+          if (file.isFile())
+          {
+            try
+            {
+              Entry newEntry = new Entry(file);
+              int index = model.indexOf(entry);
+              if (index >= 0)
+              {
+                model.setElementAt(newEntry, index);
+              }
+              else
+              {
+                model.addElement(newEntry);
+              }
+              
+              if (isCurrentSelection || model.size() == 1)
+              {
+                list.setSelectedValue(newEntry, true);
+                updateEntry();
+                photoChanged(entry);
+              }
+            }
+            catch (FileNotFoundException e)
+            {
+              // do nothing
+            }
+          }
+          else
+          {
+            model.removeElement(entry);
+            if (isCurrentSelection)
+            {
+              list.clearSelection();
+              if (!model.isEmpty())
+              {
+                list.setSelectedIndex(0);
+                updateEntry();
+                photoChanged(entry);
+              }
+            }
+          }          
+          list.repaint();
+          
+        }        
+      }   
+    };  }
+  
   public void startWatching()
   {
     watcher.startWatching();

@@ -112,7 +112,7 @@ public class EntryPhotoData
       public boolean accept(File dir,
           String name)
       {
-        return name.startsWith(entry.getUUID());
+        return entry.photoFilenameAccept(name);
       }
     });
     if (photoList.length > 0)
